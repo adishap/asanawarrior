@@ -44,8 +44,12 @@ RUNLOOP:
 		time.Sleep(5 * time.Second)
 		goto RUNLOOP
 	}
-
 	defer resp.Body.Close()
+	statusCode := resp.StatusCode
+	if statusCode != http.StatusOK {
+		err := errors.New("Request returned %v\n", http.StatusText(statusCode))
+		return nil, err
+	}
 	return ioutil.ReadAll(resp.Body)
 }
 
@@ -144,7 +148,7 @@ func getTasks(proj Basic, out chan x.WarriorTask, errc chan error) {
 	var t tasks
 	if err := runGetter(&t, fmt.Sprintf("projects/%d/tasks", proj.Id),
 		"assignee,name,tags,completed_at,modified_at,created_at"); err != nil {
-		errc <- errors.Wrapf(err, "getTasks for project: %v", proj.Name)
+		log.Printf(errors.Wrapf(err, "getTasks for project: %v", proj.Name))
 		return
 	}
 
@@ -299,7 +303,6 @@ func AddNew(wt x.WarriorTask) (x.WarriorTask, error) {
 	if err != nil {
 		return e, errors.Wrap(err, "AddNew runPost")
 	}
-	fmt.Println(string(resp))
 
 	var ot oneTask
 	if err := json.Unmarshal(resp, &ot); err != nil {
