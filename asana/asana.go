@@ -296,10 +296,10 @@ func AddNew(wt x.WarriorTask) (x.WarriorTask, error) {
 	tags := toTagIds(wt.Tags)
 	v.Add("tags", strings.Join(tags, ","))
 	resp, err := runPost("POST", "tasks", v)
-	fmt.Println(string(resp))
 	if err != nil {
 		return e, errors.Wrap(err, "AddNew runPost")
 	}
+	fmt.Println(string(resp))
 
 	var ot oneTask
 	if err := json.Unmarshal(resp, &ot); err != nil {
