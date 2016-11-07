@@ -39,17 +39,13 @@ RUNLOOP:
 	}
 
 	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("runRequest method: [%v] url: [%v] err: [%v]", method, url, err)
+	statusCode := resp.StatusCode
+	if err != nil || statusCode != http.StatusOK {
+		log.Printf("runRequest method: [%v] url: [%v] status: [%v] err: [%v]", method, url, http.StatusText(statusCode), err)
 		time.Sleep(5 * time.Second)
 		goto RUNLOOP
 	}
 	defer resp.Body.Close()
-	statusCode := resp.StatusCode
-	if statusCode != http.StatusOK {
-		err := errors.New("Request returned %v\n", http.StatusText(statusCode))
-		return nil, err
-	}
 	return ioutil.ReadAll(resp.Body)
 }
 
@@ -148,7 +144,7 @@ func getTasks(proj Basic, out chan x.WarriorTask, errc chan error) {
 	var t tasks
 	if err := runGetter(&t, fmt.Sprintf("projects/%d/tasks", proj.Id),
 		"assignee,name,tags,completed_at,modified_at,created_at"); err != nil {
-		log.Printf(errors.Wrapf(err, "getTasks for project: %v", proj.Name))
+		errc <- errors.Wrapf(err, "convert: getTasks for project: %v", proj.Name)
 		return
 	}
 
@@ -300,6 +296,7 @@ func AddNew(wt x.WarriorTask) (x.WarriorTask, error) {
 	tags := toTagIds(wt.Tags)
 	v.Add("tags", strings.Join(tags, ","))
 	resp, err := runPost("POST", "tasks", v)
+	fmt.Println(string(resp))
 	if err != nil {
 		return e, errors.Wrap(err, "AddNew runPost")
 	}
