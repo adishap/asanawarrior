@@ -144,7 +144,7 @@ func getTasks(proj Basic, out chan x.WarriorTask, errc chan error) {
 	var t tasks
 	if err := runGetter(&t, fmt.Sprintf("projects/%d/tasks", proj.Id),
 		"assignee,name,tags,completed_at,modified_at,created_at"); err != nil {
-		errc <- errors.Wrapf(err, "convert: getTasks for project: %v", proj.Name)
+		errc <- errors.Wrapf(err, "getTasks for project: %v", proj.Name)
 		return
 	}
 
